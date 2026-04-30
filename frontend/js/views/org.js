@@ -198,6 +198,7 @@ window.Views.org = (function () {
     f.appendChild(formRow("成长速度(1-5)", "growth_rate", emp.growth_rate ?? ""));
     f.appendChild(formRow("绩效趋势 rising/stable/declining", "performance_trend", emp.performance_trend || ""));
     f.appendChild(formRow("技能 JSON 数组", "skills", JSON.stringify(emp.skills || []), "textarea"));
+    f.appendChild(formRow("特殊备注", "special_notes", emp.special_notes || "", "textarea"));
 
     const save = UI.el("button", { class: "btn btn-primary" }, "保存");
     save.onclick = async () => {
@@ -216,6 +217,7 @@ window.Views.org = (function () {
         growth_rate: numOrNull(f.querySelector('[name="growth_rate"]').value),
         performance_trend: f.querySelector('[name="performance_trend"]').value || null,
         skills,
+        special_notes: f.querySelector('[name="special_notes"]').value || null,
       };
       try {
         await API.put(`/api/org/employees/${id}`, payload);

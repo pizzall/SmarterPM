@@ -146,6 +146,7 @@ def update_employee(emp_id: str, body: EmployeeIn) -> APIResponse:
         new_data["id"] = emp_id
         new_data.setdefault("correction_log", emp.get("correction_log", []))
         new_data.setdefault("collaboration_notes", emp.get("collaboration_notes", []))
+        new_data.setdefault("special_notes", emp.get("special_notes"))
         emps[emp_id] = new_data
         return APIResponse(ok=True, data=new_data, message="员工已更新")
 

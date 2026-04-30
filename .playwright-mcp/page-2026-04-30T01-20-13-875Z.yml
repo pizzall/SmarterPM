@@ -1,0 +1,96 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ●
+      - heading "SmarterPM" [level=1] [ref=e5]
+      - generic [ref=e6]: 公司执行模拟系统
+    - navigation [ref=e7]:
+      - link "组织管理" [ref=e8] [cursor=pointer]:
+        - /url: "#/org"
+      - link "人员档案" [ref=e9] [cursor=pointer]:
+        - /url: "#/employees"
+      - link "任务" [ref=e10] [cursor=pointer]:
+        - /url: "#/tasks"
+      - link "任务规划" [ref=e11] [cursor=pointer]:
+        - /url: "#/planning"
+      - link "能力值待审" [ref=e12] [cursor=pointer]:
+        - /url: "#/ability-updates"
+    - generic [ref=e13]:
+      - button "导出数据库" [ref=e14] [cursor=pointer]
+      - generic "上传 database.json 覆盖当前数据" [ref=e15] [cursor=pointer]: 导入数据库
+      - button "重置" [ref=e16] [cursor=pointer]
+  - main [ref=e17]:
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - heading "组织管理" [level=2] [ref=e108]
+        - generic [ref=e109]: 需求 1：部门 / 项目组 / 员工 增删改
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - heading "行政树" [level=3] [ref=e114]
+              - button "新增根级部门" [ref=e116] [cursor=pointer]
+            - list [ref=e117]:
+              - listitem [ref=e118] [cursor=pointer]: 公司（company）
+              - list [ref=e119]:
+                - listitem [ref=e120] [cursor=pointer]: 移动业务部（dept_product）
+                - list [ref=e121]:
+                  - listitem [ref=e122] [cursor=pointer]: 起源项目组（dept_bfb775b5）
+                  - listitem [ref=e123] [cursor=pointer]: PV项目组（dept_70a9969d）
+                  - listitem [ref=e124] [cursor=pointer]: 综合研发部（dept_b9dd85b0）
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - heading "项目组" [level=3] [ref=e127]
+              - button "新增项目组" [ref=e129] [cursor=pointer]
+            - list [ref=e130]:
+              - listitem [ref=e131] [cursor=pointer]: 跨端重构项目组（proj_001）
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - heading "员工列表" [level=3] [ref=e134]
+              - button "新增员工" [ref=e136] [cursor=pointer]
+            - list [ref=e137]:
+              - listitem [ref=e138] [cursor=pointer]: 张袁圆（emp_001）· dept_product
+              - listitem [ref=e139] [cursor=pointer]: 王翰林（emp_002）· dept_bfb775b5
+              - listitem [ref=e140] [cursor=pointer]: 赵祉皓（emp_003）· dept_b9dd85b0
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - button "表单" [ref=e143] [cursor=pointer]
+            - button "JSON 原文" [ref=e144] [cursor=pointer]
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e147]: 姓名
+              - textbox [ref=e148]: 赵祉皓
+            - generic [ref=e149]:
+              - generic [ref=e150]: 部门 id（逗号分隔）
+              - textbox [ref=e151]: dept_b9dd85b0
+            - generic [ref=e152]:
+              - generic [ref=e153]: 角色倾向
+              - textbox [ref=e154]: leader
+            - generic [ref=e155]:
+              - generic [ref=e156]: MBTI
+              - textbox [ref=e157]: ENTJ
+            - generic [ref=e158]:
+              - generic [ref=e159]: 工作范围（逗号分隔）
+              - textbox [ref=e160]: 后端开发,前端开发,技术管理
+            - generic [ref=e161]:
+              - generic [ref=e162]: 沟通(1-5)
+              - textbox [ref=e163]: "5"
+            - generic [ref=e164]:
+              - generic [ref=e165]: 责任度(1-5)
+              - textbox [ref=e166]: "5"
+            - generic [ref=e167]:
+              - generic [ref=e168]: 成长速度(1-5)
+              - textbox [ref=e169]: "4.5"
+            - generic [ref=e170]:
+              - generic [ref=e171]: 绩效趋势 rising/stable/declining
+              - textbox [ref=e172]: stable
+            - generic [ref=e173]:
+              - generic [ref=e174]: 技能 JSON 数组
+              - textbox [ref=e175]: "[{\"tag\":\"后端开发\",\"level\":4.5},{\"tag\":\"前端开发\",\"level\":4},{\"tag\":\"技术管理\",\"level\":3.5}]"
+            - generic [ref=e176]:
+              - generic [ref=e177]: 特殊备注
+              - textbox [ref=e178]
+            - generic [ref=e179]:
+              - button "保存" [ref=e180] [cursor=pointer]
+              - button "删除" [ref=e181] [cursor=pointer]
+  - button "问问 AI" [ref=e55] [cursor=pointer]

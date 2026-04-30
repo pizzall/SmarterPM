@@ -37,7 +37,7 @@ window.Views.review = (function () {
         if ((res.data.ability_proposals || []).length) {
           UI.showToast(`生成 ${res.data.ability_proposals.length} 条能力值变更建议`, "info");
         }
-        location.hash = `#/tasks/${encodeURIComponent(taskId)}/review`;
+        await render(main, taskId);
       } catch (e) { UI.showToast(e.message, "error"); }
     };
     panel.appendChild(UI.el("h3", {}, "新增回顾"));

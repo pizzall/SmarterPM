@@ -89,6 +89,32 @@ window.Views.tasks = (function () {
       f.appendChild(formRow("周期（周）", "duration_weeks", t.duration_weeks || 1));
       f.appendChild(formRow("Sprint id", "sprint_id", t.sprint_id || ""));
       f.appendChild(formRow("状态 draft/active/done/archived", "status", t.status || "draft"));
+      f.appendChild(formRow("主要任务", "primary_task", t.primary_task || "", "textarea"));
+
+      // 次要任务动态列表
+      const subTasksWrap = UI.el("div", { class: "form-row" });
+      subTasksWrap.appendChild(UI.el("label", {}, "次要任务"));
+      const subTasksList = UI.el("div", { class: "sub-tasks-list" });
+      const renderSubItems = () => {
+        subTasksList.innerHTML = "";
+        (subTasksList._items || []).forEach((val, idx) => {
+          const row = UI.el("div", { style: "display:flex;gap:6px;margin-bottom:4px;" });
+          const inp = UI.el("input", { style: "flex:1;" });
+          inp.value = val;
+          inp.oninput = () => { subTasksList._items[idx] = inp.value; };
+          const rm = UI.el("button", { class: "btn btn-danger", style: "padding:2px 8px;" }, "×");
+          rm.onclick = () => { subTasksList._items.splice(idx, 1); renderSubItems(); };
+          row.appendChild(inp); row.appendChild(rm);
+          subTasksList.appendChild(row);
+        });
+        const addBtn = UI.el("button", { class: "btn", style: "margin-top:4px;" }, "+ 添加次要任务");
+        addBtn.onclick = () => { subTasksList._items.push(""); renderSubItems(); };
+        subTasksList.appendChild(addBtn);
+      };
+      subTasksList._items = [...(t.sub_tasks || [])];
+      renderSubItems();
+      subTasksWrap.appendChild(subTasksList);
+      f.appendChild(subTasksWrap);
 
       const save = UI.el("button", { class: "btn btn-primary" }, "保存");
       save.onclick = async () => {
@@ -104,6 +130,8 @@ window.Views.tasks = (function () {
           duration_weeks: Number(f.querySelector('[name="duration_weeks"]').value) || 1,
           sprint_id: f.querySelector('[name="sprint_id"]').value || null,
           status: f.querySelector('[name="status"]').value || "draft",
+          primary_task: f.querySelector('[name="primary_task"]').value || null,
+          sub_tasks: (subTasksList._items || []).map((s) => s.trim()).filter(Boolean),
         };
         try { await API.put(`/api/tasks/${encodeURIComponent(taskId)}`, payload); UI.showToast("已保存", "success"); location.hash = "#/tasks"; }
         catch (e) { UI.showToast(e.message, "error"); }

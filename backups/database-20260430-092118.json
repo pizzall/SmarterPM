@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-04-29T18:05:23+08:00",
-    "updated_at": "2026-04-30T09:21:18+08:00",
+    "updated_at": "2026-04-30T06:52:57+08:00",
     "app": "SmarterPM"
   },
   "org": {
@@ -294,16 +294,10 @@
           "author": null,
           "mood": "neutral",
           "date": "2026-04-30T06:52:39+08:00"
-        },
-        {
-          "content": "这是一次功能验证测试，验证实时刷新功能",
-          "author": null,
-          "mood": "neutral",
-          "date": "2026-04-30T09:21:16+08:00"
         }
       ],
       "created_at": "2026-04-30T06:51:33+08:00",
-      "updated_at": "2026-04-30T09:21:16+08:00"
+      "updated_at": "2026-04-30T06:52:39+08:00"
     }
   },
   "sprints": {

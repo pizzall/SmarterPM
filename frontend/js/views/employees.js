@@ -82,6 +82,7 @@ window.Views.employees = (function () {
       ["工作范围", (emp.work_scope || []).join("、") || "—"],
       ["技能", formatSkills(inf.skills?.value || emp.skills)],
       ["技能来源", inf.skills?.source || "—"],
+      ["特殊备注", emp.special_notes || "—"],
     ];
     const list = UI.el("div", { class: "kvp" });
     lines.forEach(([k, v]) => {

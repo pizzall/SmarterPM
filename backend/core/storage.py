@@ -100,6 +100,7 @@ def _default_db() -> dict[str, Any]:
                 "performance_trend": "stable",
                 "collaboration_notes": [],
                 "correction_log": [],
+                "special_notes": None,
             },
             "emp_002": {
                 "id": "emp_002",
@@ -118,6 +119,7 @@ def _default_db() -> dict[str, Any]:
                 "performance_trend": "rising",
                 "collaboration_notes": [],
                 "correction_log": [],
+                "special_notes": None,
             },
             "emp_003": {
                 "id": "emp_003",
@@ -133,6 +135,7 @@ def _default_db() -> dict[str, Any]:
                 "performance_trend": "stable",
                 "collaboration_notes": [],
                 "correction_log": [],
+                "special_notes": None,
             },
             "emp_005": {
                 "id": "emp_005",
@@ -152,6 +155,7 @@ def _default_db() -> dict[str, Any]:
                 "performance_trend": "stable",
                 "collaboration_notes": [],
                 "correction_log": [],
+                "special_notes": None,
             },
         },
         "tasks": {

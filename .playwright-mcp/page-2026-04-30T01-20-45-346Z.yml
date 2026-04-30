@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ●
+      - heading "SmarterPM" [level=1] [ref=e5]
+      - generic [ref=e6]: 公司执行模拟系统
+    - navigation [ref=e7]:
+      - link "组织管理" [ref=e8] [cursor=pointer]:
+        - /url: "#/org"
+      - link "人员档案" [ref=e9] [cursor=pointer]:
+        - /url: "#/employees"
+      - link "任务" [ref=e10] [cursor=pointer]:
+        - /url: "#/tasks"
+      - link "任务规划" [ref=e11] [cursor=pointer]:
+        - /url: "#/planning"
+      - link "能力值待审" [ref=e12] [cursor=pointer]:
+        - /url: "#/ability-updates"
+    - generic [ref=e13]:
+      - button "导出数据库" [ref=e14] [cursor=pointer]
+      - generic "上传 database.json 覆盖当前数据" [ref=e15] [cursor=pointer]: 导入数据库
+      - button "重置" [ref=e16] [cursor=pointer]
+  - main [ref=e17]:
+    - generic [ref=e396]: 加载中…
+  - button "问问 AI" [ref=e55] [cursor=pointer]

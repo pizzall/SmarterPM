@@ -65,6 +65,7 @@ class EmployeeIn(BaseModel):
     growth_rate: Optional[float] = None
     performance_trend: Optional[Literal["rising", "stable", "declining"]] = None
     collaboration_notes: list[str] = Field(default_factory=list)
+    special_notes: Optional[str] = None
 
 
 # ---------- 任务 ----------
@@ -82,6 +83,8 @@ class TaskIn(BaseModel):
     duration_weeks: int = 1
     sprint_id: Optional[str] = None
     status: Literal["draft", "active", "done", "archived"] = "draft"
+    primary_task: Optional[str] = None
+    sub_tasks: list[str] = Field(default_factory=list)
 
 
 # ---------- 任务规划对话 ----------

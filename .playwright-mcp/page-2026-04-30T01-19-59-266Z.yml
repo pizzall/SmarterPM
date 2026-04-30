@@ -1,0 +1,56 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ●
+      - heading "SmarterPM" [level=1] [ref=e5]
+      - generic [ref=e6]: 公司执行模拟系统
+    - navigation [ref=e7]:
+      - link "组织管理" [ref=e8] [cursor=pointer]:
+        - /url: "#/org"
+      - link "人员档案" [ref=e9] [cursor=pointer]:
+        - /url: "#/employees"
+      - link "任务" [ref=e10] [cursor=pointer]:
+        - /url: "#/tasks"
+      - link "任务规划" [ref=e11] [cursor=pointer]:
+        - /url: "#/planning"
+      - link "能力值待审" [ref=e12] [cursor=pointer]:
+        - /url: "#/ability-updates"
+    - generic [ref=e13]:
+      - button "导出数据库" [ref=e14] [cursor=pointer]
+      - generic "上传 database.json 覆盖当前数据" [ref=e15] [cursor=pointer]: 导入数据库
+      - button "重置" [ref=e16] [cursor=pointer]
+  - main [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - heading "组织管理" [level=2] [ref=e20]
+        - generic [ref=e21]: 需求 1：部门 / 项目组 / 员工 增删改
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - heading "行政树" [level=3] [ref=e26]
+              - button "新增根级部门" [ref=e28] [cursor=pointer]
+            - list [ref=e29]:
+              - listitem [ref=e30] [cursor=pointer]: 公司（company）
+              - list [ref=e31]:
+                - listitem [ref=e32] [cursor=pointer]: 移动业务部（dept_product）
+                - list [ref=e33]:
+                  - listitem [ref=e34] [cursor=pointer]: 起源项目组（dept_bfb775b5）
+                  - listitem [ref=e35] [cursor=pointer]: PV项目组（dept_70a9969d）
+                  - listitem [ref=e36] [cursor=pointer]: 综合研发部（dept_b9dd85b0）
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - heading "项目组" [level=3] [ref=e39]
+              - button "新增项目组" [ref=e41] [cursor=pointer]
+            - list [ref=e42]:
+              - listitem [ref=e43] [cursor=pointer]: 跨端重构项目组（proj_001）
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - heading "员工列表" [level=3] [ref=e46]
+              - button "新增员工" [ref=e48] [cursor=pointer]
+            - list [ref=e49]:
+              - listitem [ref=e50] [cursor=pointer]: 张袁圆（emp_001）· dept_product
+              - listitem [ref=e51] [cursor=pointer]: 王翰林（emp_002）· dept_bfb775b5
+              - listitem [ref=e52] [cursor=pointer]: 赵祉皓（emp_003）· dept_b9dd85b0
+        - generic [ref=e54]: 在左侧选择部门 / 项目组 / 员工查看编辑
+  - button "问问 AI" [ref=e55] [cursor=pointer]
