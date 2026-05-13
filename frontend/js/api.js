@@ -43,12 +43,46 @@ window.UI = (function () {
   const toast = document.getElementById("toast");
   let toastTimer = null;
 
-  function showToast(text, type = "info") {
-    toast.textContent = text;
+  /**
+   * showToast(text, type, options)
+   *   - text: 主文案
+   *   - type: "info" | "success" | "error"
+   *   - options.detail: 副文案（如 "技能 已新增"）
+   *   - options.undo:   () => any 撤销回调；存在则显示撤销按钮
+   *   - options.duration: 自动关闭毫秒（默认 2600）
+   */
+  function showToast(text, type = "info", options = {}) {
+    const duration = options.duration || (options.undo ? 5000 : 2600);
+    toast.innerHTML = "";
     toast.className = "toast " + type;
+
+    const main = document.createElement("div");
+    main.className = "toast-main";
+    main.textContent = text;
+    toast.appendChild(main);
+
+    if (options.detail) {
+      const sub = document.createElement("div");
+      sub.className = "toast-sub";
+      sub.textContent = options.detail;
+      toast.appendChild(sub);
+    }
+    if (typeof options.undo === "function") {
+      const btn = document.createElement("button");
+      btn.className = "toast-undo";
+      btn.textContent = "撤销";
+      btn.onclick = () => {
+        try {
+          options.undo();
+        } finally {
+          toast.classList.add("hidden");
+        }
+      };
+      toast.appendChild(btn);
+    }
     toast.classList.remove("hidden");
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.add("hidden"), 2600);
+    toastTimer = setTimeout(() => toast.classList.add("hidden"), duration);
   }
 
   function escape(s) {
@@ -78,4 +112,82 @@ window.UI = (function () {
   }
 
   return { showToast, escape, el };
+})();
+
+/* Meta 缓存：集中读取 /api/enums 与 /api/libraries，供各组件取数。 */
+window.Meta = (function () {
+  const state = {
+    enums: null,
+    libraries: null,
+    loadingPromise: null,
+  };
+
+  async function load(force = false) {
+    if (!force && state.enums && state.libraries) return state;
+    try {
+      const [enums, libs] = await Promise.all([
+        API.get("/api/enums"),
+        API.get("/api/libraries"),
+      ]);
+      state.enums = enums.data || {};
+      state.libraries = libs.data || {};
+    } catch (e) {
+      state.enums = state.enums || {};
+      state.libraries = state.libraries || {};
+      throw e;
+    }
+    return state;
+  }
+
+  function ensure() {
+    if (state.enums && state.libraries) return Promise.resolve(state);
+    if (state.loadingPromise) return state.loadingPromise;
+    state.loadingPromise = load().finally(() => {
+      state.loadingPromise = null;
+    });
+    return state.loadingPromise;
+  }
+
+  function refresh() {
+    return load(true);
+  }
+
+  function enumOptions(name) {
+    return (state.enums && state.enums[name]) || [];
+  }
+
+  function enumLabel(name, value) {
+    const opt = enumOptions(name).find((o) => o.value === value);
+    return opt ? opt.label : value;
+  }
+
+  function employees() {
+    return (state.libraries && state.libraries.employees) || [];
+  }
+  function departments() {
+    return (state.libraries && state.libraries.departments) || [];
+  }
+  function skills() {
+    return (state.libraries && state.libraries.skill_library) || [];
+  }
+  function scopes() {
+    return (state.libraries && state.libraries.scope_library) || [];
+  }
+  function sprints() {
+    return (state.libraries && state.libraries.sprints) || [];
+  }
+
+  return {
+    get enums() { return state.enums; },
+    get libraries() { return state.libraries; },
+    ensure,
+    refresh,
+    enumOptions,
+    enumLabel,
+    employees,
+    departments,
+    skills,
+    scopes,
+    sprints,
+  };
 })();

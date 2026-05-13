@@ -1,4 +1,4 @@
-/* 任务回顾评价（需求 6）。 */
+/* 任务回顾评价（需求 6，UX §5.5 改写）。 */
 window.Views = window.Views || {};
 window.Views.review = (function () {
   async function render(main, taskId) {
@@ -15,46 +15,93 @@ window.Views.review = (function () {
     ]));
 
     const panel = UI.el("div", { class: "panel" });
-    const ta = UI.el("textarea", { class: "json-input", style: "min-height:120px;", placeholder: "回顾内容：进展、亮点、问题、人员表现等" });
-    const moodSel = UI.el("select");
-    ["positive", "neutral", "negative"].forEach((v) => {
-      const o = UI.el("option", { value: v }, v);
-      moodSel.appendChild(o);
+    panel.appendChild(UI.el("h3", {}, "新增回顾"));
+
+    const contentField = Components.field.create("内容", {
+      required: true,
+      help: Help.get("review.content"),
     });
-    moodSel.value = "neutral";
-    const author = UI.el("input", { placeholder: "作者 emp_id（可选）" });
-    const submit = UI.el("button", { class: "btn btn-primary" }, "提交回顾");
+    const ta = UI.el("textarea", {
+      rows: "5",
+      placeholder: "回顾内容：进展、亮点、问题、人员表现等",
+    });
+    contentField.body.appendChild(ta);
+    panel.appendChild(contentField.root);
+
+    const moodField = Components.field.create("情绪", {
+      help: Help.get("review.mood"),
+    });
+    const moodWrap = UI.el("div");
+    const moodCtrl = Components.enumSelect.mount(moodWrap, {
+      enumName: "mood",
+      value: "neutral",
+      allowEmpty: false,
+    });
+    moodField.body.appendChild(moodWrap);
+    panel.appendChild(moodField.root);
+
+    const authorField = Components.field.create("作者", {
+      help: Help.get("review.author"),
+    });
+    const authorWrap = UI.el("div");
+    const authorCtrl = Components.employeePicker.mount(authorWrap, {
+      value: null,
+      placeholder: "选择作者（可选）",
+    });
+    authorField.body.appendChild(authorWrap);
+    panel.appendChild(authorField.root);
+
+    const submit = UI.el("button", { class: "btn btn-primary", "data-form-save": "1" }, "提交回顾");
     submit.onclick = async () => {
       const content = ta.value.trim();
-      if (!content) return UI.showToast("回顾内容不能为空", "error");
+      if (!content) {
+        contentField.setError("回顾内容不能为空");
+        return;
+      }
+      contentField.clearError();
       try {
-        const res = await API.post(`/api/tasks/${encodeURIComponent(taskId)}/review`, {
-          content,
-          mood: moodSel.value,
-          author: author.value || null,
+        const res = await API.post(
+          `/api/tasks/${encodeURIComponent(taskId)}/review`,
+          {
+            content,
+            mood: moodCtrl.getValue() || "neutral",
+            author: authorCtrl.getValue() || null,
+          }
+        );
+        UI.showToast("已记录回顾", "success", {
+          detail: Meta.enumLabel("mood", moodCtrl.getValue() || "neutral"),
         });
-        UI.showToast("已记录回顾", "success");
         if ((res.data.ability_proposals || []).length) {
-          UI.showToast(`生成 ${res.data.ability_proposals.length} 条能力值变更建议`, "info");
+          UI.showToast(
+            `生成 ${res.data.ability_proposals.length} 条能力值变更建议`,
+            "info"
+          );
         }
         await render(main, taskId);
       } catch (e) { UI.showToast(e.message, "error"); }
     };
-    panel.appendChild(UI.el("h3", {}, "新增回顾"));
-    panel.appendChild(formRow("内容", ta));
-    panel.appendChild(formRow("情绪", moodSel));
-    panel.appendChild(formRow("作者", author));
     panel.appendChild(UI.el("div", { class: "actions-row" }, [submit]));
     wrap.appendChild(panel);
 
     const list = UI.el("div", { class: "panel" });
     list.appendChild(UI.el("h3", {}, `历史回顾（${(t.review || []).length}）`));
-    if (!(t.review || []).length) list.appendChild(UI.el("div", { class: "muted" }, "暂无"));
-    else {
-      const ul = UI.el("ul");
+    if (!(t.review || []).length) {
+      list.appendChild(UI.el("div", { class: "muted" }, "暂无"));
+    } else {
+      const ul = UI.el("ul", { class: "review-timeline" });
       t.review.slice().reverse().forEach((r) => {
-        const li = UI.el("li");
-        li.innerHTML = `<b>${UI.escape(r.date)}</b> · ${UI.escape(r.author || "")} · ${UI.escape(r.mood || "")}<br>${UI.escape(r.content)}`;
+        const li = UI.el("li", { class: `review-item mood-${UI.escape(r.mood || "neutral")}` });
+        const moodLabel = Meta.enumLabel
+          ? Meta.enumLabel("mood", r.mood)
+          : r.mood;
+        const authorName = r.author
+          ? Components.employeePicker.nameOf(r.author)
+          : "";
+        li.innerHTML = `<div class="review-head"><b>${UI.escape(
+          r.date || ""
+        )}</b> · ${UI.escape(authorName)} · <span class="badge">${UI.escape(
+          moodLabel || ""
+        )}</span></div><div class="review-body">${UI.escape(r.content)}</div>`;
         ul.appendChild(li);
       });
       list.appendChild(ul);
@@ -62,13 +109,6 @@ window.Views.review = (function () {
     wrap.appendChild(list);
 
     main.appendChild(wrap);
-  }
-
-  function formRow(label, ctrl) {
-    const wrap = UI.el("div", { class: "form-row" });
-    wrap.appendChild(UI.el("label", {}, label));
-    wrap.appendChild(ctrl);
-    return wrap;
   }
 
   return { render };

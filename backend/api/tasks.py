@@ -49,6 +49,8 @@ def create_task(body: TaskIn) -> APIResponse:
 
 @router.put("/{task_id}")
 def update_task(task_id: str, body: TaskIn) -> APIResponse:
+    from backend.api.notifications import push_notification
+
     db = get_db()
     with db.transaction() as data:
         tasks = data.get("tasks") or {}
@@ -61,7 +63,30 @@ def update_task(task_id: str, body: TaskIn) -> APIResponse:
         new_data.setdefault("review", task.get("review", []))
         new_data["created_at"] = task.get("created_at", now_iso())
         new_data["updated_at"] = now_iso()
+        old_status = task.get("status")
+        old_progress = task.get("progress")
         tasks[task_id] = new_data
+        if new_data.get("status") and new_data["status"] != old_status:
+            push_notification(
+                data,
+                title=f"任务状态变更：{new_data.get('title','')}",
+                kind="task_status",
+                body=f"{old_status or '-'} → {new_data['status']}",
+                link=f"#/tasks/{task_id}",
+                related={"task_id": task_id, "from": old_status, "to": new_data["status"]},
+            )
+        if (
+            new_data.get("progress") is not None
+            and new_data.get("progress") != old_progress
+        ):
+            push_notification(
+                data,
+                title=f"进度更新：{new_data.get('title','')}",
+                kind="progress_update",
+                body=f"{old_progress or 0}% → {new_data['progress']}%",
+                link=f"#/tasks/{task_id}",
+                related={"task_id": task_id, "progress": new_data["progress"]},
+            )
         return APIResponse(ok=True, data=new_data, message="任务已更新")
 
 
@@ -81,6 +106,63 @@ def delete_task(task_id: str) -> APIResponse:
         for k in to_remove:
             del proposals[k]
         return APIResponse(ok=True, message="任务已删除")
+
+
+@router.get("/{task_id}/conflicts")
+def task_conflicts(task_id: str) -> APIResponse:
+    """检查任务方案中的成员是否已在其它 active 任务里。"""
+
+    db = get_db()
+    tasks = db.get_section("tasks") or {}
+    target = tasks.get(task_id)
+    if not target:
+        raise HTTPException(404, f"任务不存在: {task_id}")
+    employees = db.get_section("employees") or {}
+
+    # 当前任务方案涉及的成员集合
+    current_members: set[str] = set()
+    for prop in target.get("proposals") or []:
+        for m in prop.get("members") or []:
+            if m.get("employee_id"):
+                current_members.add(m["employee_id"])
+
+    if not current_members:
+        return APIResponse(ok=True, data={"conflicts": []})
+
+    # 其它 active 任务里的占用
+    occupied: dict[str, list[dict[str, Any]]] = {eid: [] for eid in current_members}
+    for tid, t in tasks.items():
+        if tid == task_id:
+            continue
+        if t.get("status") != "active":
+            continue
+        for prop in t.get("proposals") or []:
+            for m in prop.get("members") or []:
+                eid = m.get("employee_id")
+                if eid in occupied:
+                    occupied[eid].append({
+                        "task_id": tid,
+                        "title": t.get("title"),
+                        "role": m.get("role"),
+                    })
+
+    conflicts = []
+    for eid, items in occupied.items():
+        if not items:
+            continue
+        # 同任务多个方案占用合并
+        seen: dict[str, dict[str, Any]] = {}
+        for it in items:
+            seen[it["task_id"]] = it
+        emp = employees.get(eid, {})
+        conflicts.append({
+            "employee_id": eid,
+            "name": emp.get("name") or eid,
+            "other_tasks": [v.get("title") or k for k, v in seen.items()],
+            "task_ids": list(seen.keys()),
+        })
+
+    return APIResponse(ok=True, data={"conflicts": conflicts})
 
 
 @router.post("/import-json")

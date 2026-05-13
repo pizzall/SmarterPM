@@ -50,6 +50,27 @@ def add_review(task_id: str, body: ReviewIn) -> APIResponse:
             input_text=body.content,
             related_employee_ids=related,
         )
+
+        from backend.api.notifications import push_notification
+
+        push_notification(
+            data,
+            title=f"新增回顾：{task.get('title','')}",
+            kind="review_added",
+            body=(body.content or "")[:80],
+            link=f"#/tasks/{task_id}/review",
+            related={"task_id": task_id, "mood": body.mood},
+        )
+        if ability_proposals:
+            push_notification(
+                data,
+                title=f"能力值待审 +{len(ability_proposals)}",
+                kind="ability_pending",
+                body="由回顾触发，请到「能力值待审」处理",
+                link="#/ability-updates",
+                related={"task_id": task_id, "count": len(ability_proposals)},
+            )
+
         return APIResponse(
             ok=True,
             data={"review_item": item, "ability_proposals": ability_proposals},

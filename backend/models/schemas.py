@@ -66,9 +66,17 @@ class EmployeeIn(BaseModel):
     performance_trend: Optional[Literal["rising", "stable", "declining"]] = None
     collaboration_notes: list[str] = Field(default_factory=list)
     special_notes: Optional[str] = None
+    cost_rate: Optional[float] = None
 
 
 # ---------- 任务 ----------
+
+
+class MilestoneItem(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    title: str = ""
+    due: Optional[str] = None
+    done: bool = False
 
 
 class TaskIn(BaseModel):
@@ -78,6 +86,7 @@ class TaskIn(BaseModel):
     description: str = ""
     requester: Optional[str] = None
     complexity: Literal["normal", "advanced", "epic"] = "normal"
+    priority: Optional[Literal["low", "normal", "high", "urgent"]] = None
     required_roles: dict[str, int] = Field(default_factory=dict)
     required_skills: list[str] = Field(default_factory=list)
     duration_weeks: int = 1
@@ -85,6 +94,11 @@ class TaskIn(BaseModel):
     status: Literal["draft", "active", "done", "archived"] = "draft"
     primary_task: Optional[str] = None
     sub_tasks: list[str] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list)
+    budget_cap: Optional[float] = None
+    progress: Optional[float] = None
+    blockers: list[str] = Field(default_factory=list)
+    milestones: list[MilestoneItem] = Field(default_factory=list)
 
 
 # ---------- 任务规划对话 ----------

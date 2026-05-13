@@ -21,6 +21,8 @@ from backend.api import (
     chat,
     database,
     employees,
+    meta,
+    notifications,
     org,
     planning,
     proposals,
@@ -57,6 +59,8 @@ def create_app() -> FastAPI:
     app.include_router(ability_updates.router)
     app.include_router(chat.router)
     app.include_router(database.router)
+    app.include_router(meta.router)
+    app.include_router(notifications.router)
 
     @app.get("/api/health")
     def health() -> dict:

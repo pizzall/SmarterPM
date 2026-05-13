@@ -1,0 +1,302 @@
+# ============================================================
+# SmarterPM .gitignore
+# ============================================================
+
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# ------------------------------------------------------------
+# Virtual Environment (CRITICAL - should not be committed)
+# ------------------------------------------------------------
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.virtualenv/
+
+# ------------------------------------------------------------
+# Database & Backups (SENSITIVE DATA)
+# ------------------------------------------------------------
+
+# Main database file - contains ALL business data
+# ⚠️ WARNING: This file may contain sensitive employee information
+# ⚠️ Consider keeping a template/sample version separately
+database.json
+
+# Backup files - auto-generated, should not be committed
+backups/
+backups/*.json
+
+# ------------------------------------------------------------
+# Configuration (SENSITIVE - contains API keys)
+# ------------------------------------------------------------
+
+# ⚠️ WARNING: config.json contains LLM API key
+# ⚠️ Use config.example.json as template instead
+config.json
+
+# Keep example config
+!config.example.json
+
+# ------------------------------------------------------------
+# IDE & Editor
+# ------------------------------------------------------------
+
+# Claude AI
+.claude/
+.claude/settings.local.json
+
+# Cursor IDE
+.cursor/
+.git/cursor/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ------------------------------------------------------------
+# Test & Screenshot Files
+# ------------------------------------------------------------
+
+# Test screenshots - should not be committed
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+
+# Keep documentation images if needed
+# !.doc/images/*.png
+
+# Smoke test - optional, may keep for reference
+# smoke_test.py
+
+# ------------------------------------------------------------
+# Playwright MCP (Testing tool artifacts)
+# ------------------------------------------------------------
+
+.playwright-mcp/
+.playwright-mcp/*.yml
+.playwright-mcp/*.json
+
+# ------------------------------------------------------------
+# OS Generated Files
+# ------------------------------------------------------------
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ------------------------------------------------------------
+# Logs & Debugging
+# ------------------------------------------------------------
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Debug files
+debug/
+*.debug
+
+# ------------------------------------------------------------
+# Temporary Files
+# ------------------------------------------------------------
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# ------------------------------------------------------------
+# Documentation Artifacts
+# ------------------------------------------------------------
+
+# Generated documentation (keep source)
+doc/_build/
+site/
+
+# ------------------------------------------------------------
+# Security & Secrets
+# ------------------------------------------------------------
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Secrets files
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Credentials
+credentials.json
+secrets.json
+.secrets/
+
+# ------------------------------------------------------------
+# Build Artifacts
+# ------------------------------------------------------------
+
+# Compiled output
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# Package Files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ============================================================
+# KEEP (Do NOT Ignore)
+# ============================================================
+
+# Documentation
+!README.md
+!UX-IMPROVEMENT-PLAN.md
+!.doc/
+!.doc/*.md
+
+# Requirements
+!requirements.txt
+
+# Source code (backend/frontend)
+!backend/
+!backend/**/*.py
+!frontend/
+!frontend/**/*.js
+!frontend/**/*.html
+!frontend/**/*.css
+
+# Example template (create if needed)
+!config.example.json
+
+# Sample database template (create if needed)
+!database.example.json
+
+# ============================================================
+# NOTES
+# ============================================================
+
+# This .gitignore follows a defensive approach:
+# - Ignores ALL sensitive/generated files
+# - Uses ! prefix to explicitly keep important files
+# - Sections organized by category for easy maintenance
+#
+# Before committing, ensure:
+# 1. config.json is NOT committed (contains API key)
+# 2. database.json is NOT committed (contains employee data)
+# 3. backups/ is NOT committed (auto-generated)
+# 4. .venv/ is NOT committed (virtual environment)
+# 5. Screenshots are NOT committed
+#
+# Recommended: Create config.example.json and database.example.json
+# as templates for new users.

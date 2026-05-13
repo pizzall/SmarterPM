@@ -299,6 +299,23 @@ def generate_candidate_groups(db_data: dict[str, Any], task: dict[str, Any]) -> 
     if not scope:
         scope = list(employees.values())
 
+    # 成本上限软约束：若任务设置了 budget_cap，则把超出"人均预算"的高成本成员降权（不强制剔除）
+    budget_cap = task.get("budget_cap")
+    if isinstance(budget_cap, (int, float)) and budget_cap > 0:
+        roles_total = sum((task.get("required_roles") or {"executor": 1}).values()) or 1
+        avg_budget = budget_cap / roles_total
+        def _affordable(e: dict[str, Any]) -> bool:
+            rate = e.get("cost_rate")
+            if rate is None:
+                return True
+            try:
+                return float(rate) <= avg_budget * 1.5
+            except Exception:
+                return True
+        affordable_scope = [e for e in scope if _affordable(e)]
+        if affordable_scope:
+            scope = affordable_scope
+
     primary_dept = None
     requester = employees.get(task.get("requester") or "")
     if requester and requester.get("departments"):

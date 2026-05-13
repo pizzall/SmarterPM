@@ -80,11 +80,20 @@ window.Views.org = (function () {
     }
 
     const tabs = UI.el("div", { class: "tabs" });
-    ["form", "json"].forEach((mode) => {
-      const b = UI.el("button", { class: state.mode === mode ? "active" : "" }, mode === "form" ? "表单" : "JSON 原文");
-      b.onclick = () => { state.mode = mode; paintEditor(); };
-      tabs.appendChild(b);
-    });
+    const formBtn = UI.el(
+      "button",
+      { class: state.mode === "form" ? "active" : "" },
+      "表单"
+    );
+    formBtn.onclick = () => { state.mode = "form"; paintEditor(); };
+    const jsonBtn = UI.el(
+      "button",
+      { class: state.mode === "json" ? "active" : "" }
+    );
+    jsonBtn.innerHTML = 'JSON 原文 <span class="badge">高级</span>';
+    jsonBtn.onclick = () => { state.mode = "json"; paintEditor(); };
+    tabs.appendChild(formBtn);
+    tabs.appendChild(jsonBtn);
     editor.appendChild(tabs);
 
     const sel = state.selected;
@@ -100,24 +109,41 @@ window.Views.org = (function () {
       paintJsonEditor(editor, dept, async (parsed) => {
         await API.put(`/api/org/dept/${id}`, parsed);
         UI.showToast("部门已更新", "success");
-        await load(); paint();
+        await load(); await Meta.refresh().catch(()=>null); paint();
       });
       return;
     }
     const f = UI.el("div");
-    f.appendChild(formRow("部门名称", "name", dept.name));
-    f.appendChild(formRow("负责人 emp_id", "head", dept.head || ""));
+    const nameField = Components.field.create("部门名称", { required: true });
+    const nameInput = UI.el("input", { name: "name" });
+    nameInput.value = dept.name || "";
+    nameField.body.appendChild(nameInput);
+    f.appendChild(nameField.root);
+
+    const headField = Components.field.create("负责人", {
+      help: "选择员工作为部门负责人",
+    });
+    const headPickerWrap = UI.el("div");
+    const headCtrl = Components.employeePicker.mount(headPickerWrap, {
+      value: dept.head || null,
+      allowEmpty: true,
+    });
+    headField.body.appendChild(headPickerWrap);
+    f.appendChild(headField.root);
 
     const save = UI.el("button", { class: "btn btn-primary" }, "保存");
     save.onclick = async () => {
-      const payload = {
-        name: f.querySelector('[name="name"]').value,
-        head: f.querySelector('[name="head"]').value || null,
-      };
+      const nm = nameInput.value.trim();
+      if (!nm) {
+        nameField.setError("部门名称不能为空");
+        return;
+      }
+      nameField.clearError();
+      const payload = { name: nm, head: headCtrl.getValue() || null };
       try {
         await API.put(`/api/org/dept/${id}`, payload);
-        UI.showToast("部门已更新", "success");
-        await load(); paint();
+        UI.showToast("部门已更新", "success", { detail: `${nm}` });
+        await load(); await Meta.refresh().catch(()=>null); paint();
       } catch (e) { UI.showToast(e.message, "error"); }
     };
     const addChild = UI.el("button", { class: "btn" }, "添加子部门");
@@ -147,31 +173,72 @@ window.Views.org = (function () {
     if (state.mode === "json") {
       paintJsonEditor(editor, pg, async (parsed) => {
         await API.put(`/api/org/project-groups/${id}`, parsed);
-        await load(); paint();
+        await load(); await Meta.refresh().catch(()=>null); paint();
       });
       return;
     }
     const f = UI.el("div");
-    f.appendChild(formRow("名称", "name", pg.name));
-    f.appendChild(formRow("负责人 emp_id", "head", pg.head || ""));
-    f.appendChild(formRow("成员 emp_id（逗号分隔）", "members", (pg.members || []).join(",")));
-    f.appendChild(formRow("状态", "status", pg.status || "active"));
-    const save = UI.el("button", { class: "btn btn-primary" }, "保存");
+
+    const nameField = Components.field.create("名称", { required: true });
+    const nameInput = UI.el("input", { name: "name" });
+    nameInput.value = pg.name || "";
+    nameField.body.appendChild(nameInput);
+    f.appendChild(nameField.root);
+
+    const headField = Components.field.create("负责人", { help: Help.get("pg.head") });
+    const headWrap = UI.el("div");
+    const headCtrl = Components.employeePicker.mount(headWrap, { value: pg.head || null });
+    headField.body.appendChild(headWrap);
+    f.appendChild(headField.root);
+
+    const memField = Components.field.create("成员", { help: Help.get("pg.members") });
+    const memWrap = UI.el("div");
+    const memOpts = Meta.employees().map((e) => ({
+      value: e.id,
+      label: e.name,
+      sub: e.id,
+    }));
+    const memCtrl = Components.multiSelect.mount(memWrap, {
+      options: memOpts,
+      value: pg.members || [],
+      placeholder: "添加成员…",
+      allowCreate: false,
+    });
+    memField.body.appendChild(memWrap);
+    f.appendChild(memField.root);
+
+    const statField = Components.field.create("状态", { help: Help.get("pg.status") });
+    const statWrap = UI.el("div");
+    const statCtrl = Components.enumSelect.mount(statWrap, {
+      enumName: "project_group_status",
+      value: pg.status || "active",
+      allowEmpty: false,
+    });
+    statField.body.appendChild(statWrap);
+    f.appendChild(statField.root);
+
+    const save = UI.el("button", { class: "btn btn-primary", "data-form-save": "1" }, "保存");
     save.onclick = async () => {
+      const nm = nameInput.value.trim();
+      if (!nm) { nameField.setError("不能为空"); return; }
+      nameField.clearError();
       const payload = {
-        name: f.querySelector('[name="name"]').value,
-        head: f.querySelector('[name="head"]').value || null,
-        members: f.querySelector('[name="members"]').value.split(",").map((s) => s.trim()).filter(Boolean),
-        status: f.querySelector('[name="status"]').value,
+        name: nm,
+        head: headCtrl.getValue() || null,
+        members: memCtrl.getValue(),
+        status: statCtrl.getValue() || "active",
       };
-      try { await API.put(`/api/org/project-groups/${id}`, payload); await load(); paint(); }
-      catch (e) { UI.showToast(e.message, "error"); }
+      try {
+        await API.put(`/api/org/project-groups/${id}`, payload);
+        UI.showToast("项目组已更新", "success", { detail: nm });
+        await load(); await Meta.refresh().catch(()=>null); paint();
+      } catch (e) { UI.showToast(e.message, "error"); }
     };
     const del = UI.el("button", { class: "btn btn-danger" }, "删除");
     del.onclick = async () => {
       if (!confirm("删除此项目组？")) return;
       await API.del(`/api/org/project-groups/${id}`);
-      state.selected = null; await load(); paint();
+      state.selected = null; await load(); await Meta.refresh().catch(()=>null); paint();
     };
     f.appendChild(UI.el("div", { class: "actions-row" }, [save, del]));
     editor.appendChild(f);
@@ -183,53 +250,218 @@ window.Views.org = (function () {
     if (state.mode === "json") {
       paintJsonEditor(editor, emp, async (parsed) => {
         await API.put(`/api/org/employees/${id}`, parsed);
-        await load(); paint();
+        await load(); await Meta.refresh().catch(()=>null); paint();
       });
       return;
     }
-    const f = UI.el("div");
-    f.appendChild(formRow("姓名", "name", emp.name));
-    f.appendChild(formRow("部门 id（逗号分隔）", "departments", (emp.departments || []).join(",")));
-    f.appendChild(formRow("角色倾向", "role_tendency", emp.role_tendency || ""));
-    f.appendChild(formRow("MBTI", "mbti", emp.mbti || ""));
-    f.appendChild(formRow("工作范围（逗号分隔）", "work_scope", (emp.work_scope || []).join(",")));
-    f.appendChild(formRow("沟通(1-5)", "communication", emp.communication ?? ""));
-    f.appendChild(formRow("责任度(1-5)", "responsibility", emp.responsibility ?? ""));
-    f.appendChild(formRow("成长速度(1-5)", "growth_rate", emp.growth_rate ?? ""));
-    f.appendChild(formRow("绩效趋势 rising/stable/declining", "performance_trend", emp.performance_trend || ""));
-    f.appendChild(formRow("技能 JSON 数组", "skills", JSON.stringify(emp.skills || []), "textarea"));
-    f.appendChild(formRow("特殊备注", "special_notes", emp.special_notes || "", "textarea"));
+    const f = UI.el("div", { class: "emp-edit-form" });
 
-    const save = UI.el("button", { class: "btn btn-primary" }, "保存");
+    // 姓名
+    const nameField = Components.field.create("姓名", {
+      required: true,
+      help: Help.get("emp.name"),
+    });
+    const nameInput = UI.el("input", { name: "name" });
+    nameInput.value = emp.name || "";
+    nameField.body.appendChild(nameInput);
+    f.appendChild(nameField.root);
+
+    // 部门（多选）
+    const deptField = Components.field.create("部门", {
+      required: true,
+      help: Help.get("emp.departments"),
+    });
+    const deptWrap = UI.el("div");
+    const deptCtrl = Components.deptPicker.mount(deptWrap, {
+      value: emp.departments || [],
+      multiple: true,
+    });
+    deptField.body.appendChild(deptWrap);
+    f.appendChild(deptField.root);
+
+    // 角色倾向（enum）
+    const roleField = Components.field.create("角色倾向", {
+      help: Help.get("emp.role_tendency"),
+    });
+    const roleWrap = UI.el("div");
+    const roleCtrl = Components.enumSelect.mount(roleWrap, {
+      enumName: "role_tendency",
+      value: emp.role_tendency || null,
+      allowEmpty: true,
+    });
+    roleField.body.appendChild(roleWrap);
+    f.appendChild(roleField.root);
+
+    // MBTI（enum）
+    const mbtiField = Components.field.create("MBTI", {
+      help: Help.get("emp.mbti"),
+    });
+    const mbtiWrap = UI.el("div");
+    const mbtiCtrl = Components.enumSelect.mount(mbtiWrap, {
+      enumName: "mbti",
+      value: emp.mbti || null,
+      allowEmpty: true,
+    });
+    mbtiField.body.appendChild(mbtiWrap);
+    f.appendChild(mbtiField.root);
+
+    // 工作范围（多选 + 可新建）
+    const scopeField = Components.field.create("工作范围", {
+      help: Help.get("emp.work_scope"),
+    });
+    const scopeWrap = UI.el("div");
+    const scopeOpts = Meta.scopes().map((s) => ({ value: s, label: s }));
+    const scopeCtrl = Components.multiSelect.mount(scopeWrap, {
+      options: scopeOpts,
+      value: emp.work_scope || [],
+      placeholder: "选择或输入工作范围",
+      allowCreate: true,
+    });
+    scopeField.body.appendChild(scopeWrap);
+    f.appendChild(scopeField.root);
+
+    // 沟通 / 责任 / 成长（slider）
+    const labels15 = (Meta.enums && Meta.enums.ability_level_labels) || [
+      "很差", "较差", "一般", "不错", "很好",
+    ];
+    const commField = Components.field.create("沟通能力 (1-5)", {
+      help: Help.get("emp.communication"),
+    });
+    const commWrap = UI.el("div");
+    const commCtrl = Components.slider.mount(commWrap, {
+      value: emp.communication,
+      min: 1, max: 5, step: 0.01,
+      labels: labels15,
+    });
+    commField.body.appendChild(commWrap);
+    f.appendChild(commField.root);
+
+    const respField = Components.field.create("责任度 (1-5)", {
+      help: Help.get("emp.responsibility"),
+    });
+    const respWrap = UI.el("div");
+    const respCtrl = Components.slider.mount(respWrap, {
+      value: emp.responsibility,
+      min: 1, max: 5, step: 0.01,
+      labels: labels15,
+    });
+    respField.body.appendChild(respWrap);
+    f.appendChild(respField.root);
+
+    const growField = Components.field.create("成长速度 (1-5)", {
+      help: Help.get("emp.growth_rate"),
+    });
+    const growWrap = UI.el("div");
+    const growCtrl = Components.slider.mount(growWrap, {
+      value: emp.growth_rate,
+      min: 1, max: 5, step: 0.01,
+      labels: labels15,
+    });
+    growField.body.appendChild(growWrap);
+    f.appendChild(growField.root);
+
+    // 绩效趋势
+    const trendField = Components.field.create("绩效趋势", {
+      help: Help.get("emp.performance_trend"),
+    });
+    const trendWrap = UI.el("div");
+    const trendCtrl = Components.enumSelect.mount(trendWrap, {
+      enumName: "performance_trend",
+      value: emp.performance_trend || null,
+      allowEmpty: true,
+    });
+    trendField.body.appendChild(trendWrap);
+    f.appendChild(trendField.root);
+
+    // 技能编辑器
+    const skillField = Components.field.create("技能", {
+      help: Help.get("emp.skills"),
+    });
+    const skillWrap = UI.el("div");
+    const skillCtrl = Components.skillEditor.mount(skillWrap, {
+      value: emp.skills || [],
+    });
+    skillField.body.appendChild(skillWrap);
+    f.appendChild(skillField.root);
+
+    // 成本（用于推荐时的预算软约束）
+    const costField = Components.field.create("成本（每周，可选）", {
+      help: "用于任务预算上限校验；为空表示不参与成本判断",
+    });
+    const costInput = UI.el("input", {
+      type: "number",
+      min: "0",
+      placeholder: "例如：5000",
+    });
+    costInput.value = emp.cost_rate != null ? String(emp.cost_rate) : "";
+    costField.body.appendChild(costInput);
+    f.appendChild(costField.root);
+
+    // 特殊备注
+    const noteField = Components.field.create("特殊备注", {
+      help: Help.get("emp.special_notes"),
+    });
+    const noteArea = UI.el("textarea", { rows: "3" });
+    noteArea.value = emp.special_notes || "";
+    noteField.body.appendChild(noteArea);
+    f.appendChild(noteField.root);
+
+    const save = UI.el(
+      "button",
+      { class: "btn btn-primary", "data-form-save": "1" },
+      "保存"
+    );
     save.onclick = async () => {
-      const numOrNull = (s) => s === "" ? null : Number(s);
-      let skills = [];
-      try { skills = JSON.parse(f.querySelector('[name="skills"]').value || "[]"); }
-      catch { return UI.showToast("skills 不是合法 JSON", "error"); }
+      const v = Components.validator.create();
+      v.add(nameField, () => nameInput.value, [
+        Components.validator.required("姓名不能为空"),
+      ]);
+      v.add(deptField, () => deptCtrl.getValue(), [
+        Components.validator.required("至少选择 1 个部门"),
+      ]);
+      v.add(commField, () => commCtrl.getValue(), [
+        Components.validator.range(1, 5),
+      ]);
+      v.add(respField, () => respCtrl.getValue(), [
+        Components.validator.range(1, 5),
+      ]);
+      v.add(growField, () => growCtrl.getValue(), [
+        Components.validator.range(1, 5),
+      ]);
+      if (!v.validate()) {
+        UI.showToast("请修正高亮字段", "error");
+        return;
+      }
       const payload = {
-        name: f.querySelector('[name="name"]').value,
-        departments: f.querySelector('[name="departments"]').value.split(",").map((s) => s.trim()).filter(Boolean),
-        role_tendency: f.querySelector('[name="role_tendency"]').value || null,
-        mbti: f.querySelector('[name="mbti"]').value || null,
-        work_scope: f.querySelector('[name="work_scope"]').value.split(",").map((s) => s.trim()).filter(Boolean),
-        communication: numOrNull(f.querySelector('[name="communication"]').value),
-        responsibility: numOrNull(f.querySelector('[name="responsibility"]').value),
-        growth_rate: numOrNull(f.querySelector('[name="growth_rate"]').value),
-        performance_trend: f.querySelector('[name="performance_trend"]').value || null,
-        skills,
-        special_notes: f.querySelector('[name="special_notes"]').value || null,
+        name: nameInput.value.trim(),
+        departments: deptCtrl.getValue(),
+        role_tendency: roleCtrl.getValue() || null,
+        mbti: mbtiCtrl.getValue() || null,
+        work_scope: scopeCtrl.getValue(),
+        communication: commCtrl.getValue(),
+        responsibility: respCtrl.getValue(),
+        growth_rate: growCtrl.getValue(),
+        performance_trend: trendCtrl.getValue() || null,
+        skills: skillCtrl.getValue(),
+        cost_rate: costInput.value === "" ? null : Number(costInput.value),
+        special_notes: noteArea.value.trim() || null,
       };
       try {
         await API.put(`/api/org/employees/${id}`, payload);
-        UI.showToast("员工已更新", "success");
-        await load(); paint();
+        UI.showToast("员工已更新", "success", {
+          detail: `${payload.name} · ${payload.skills.length} 项技能`,
+        });
+        await load(); await Meta.refresh().catch(()=>null); paint();
       } catch (e) { UI.showToast(e.message, "error"); }
     };
     const del = UI.el("button", { class: "btn btn-danger" }, "删除");
     del.onclick = async () => {
-      if (!confirm(`删除员工 ${id}？`)) return;
+      if (!confirm(`删除员工 ${emp.name}（${id}）？`)) return;
       await API.del(`/api/org/employees/${id}`);
-      state.selected = null; await load(); paint();
+      state.selected = null;
+      await load();
+      await Meta.refresh().catch(()=>null);
+      paint();
     };
     f.appendChild(UI.el("div", { class: "actions-row" }, [save, del]));
     editor.appendChild(f);

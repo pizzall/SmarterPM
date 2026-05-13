@@ -166,6 +166,8 @@ def refine(cid: str, body: PlanningRefineIn) -> APIResponse:
 
 @router.post("/{cid}/finalize")
 def finalize(cid: str, body: PlanningFinalizeIn) -> APIResponse:
+    from backend.api.notifications import push_notification
+
     db = get_db()
     with db.transaction() as data:
         conv = (data.get("conversations") or {}).get(cid)
@@ -194,6 +196,14 @@ def finalize(cid: str, body: PlanningFinalizeIn) -> APIResponse:
             "review": [],
         }
         data.setdefault("tasks", {})[new_id] = task
+        push_notification(
+            data,
+            title=f"任务已 finalize：{task['title']}",
+            kind="proposal_finalize",
+            body=f"由对话 {cid} 创建",
+            link=f"#/tasks/{new_id}",
+            related={"task_id": new_id, "conversation_id": cid},
+        )
         return APIResponse(ok=True, data=task, message="任务已 finalize")
 
 

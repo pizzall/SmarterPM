@@ -16,11 +16,20 @@
     <nav class="nav">
       <a href="#/org" data-view="org">组织管理</a>
       <a href="#/employees" data-view="employees">人员档案</a>
+      <a href="#/people-status" data-view="people-status">人员状态</a>
       <a href="#/tasks" data-view="tasks">任务</a>
+      <a href="#/board" data-view="board">看板</a>
       <a href="#/planning" data-view="planning">任务规划</a>
+      <a href="#/sprints" data-view="sprints">Sprint 简报</a>
       <a href="#/ability-updates" data-view="ability-updates">能力值待审</a>
+      <a href="#/notifications" data-view="notifications" id="nav-notifications">通知 <span id="nav-notif-dot" class="notif-dot hidden">0</span></a>
     </nav>
     <div class="db-tools">
+      <div class="global-search">
+        <input id="global-search" placeholder="搜索员工 / 任务 / 技能（Ctrl+K）" />
+        <div id="global-search-panel" class="global-search-panel hidden"></div>
+      </div>
+      <button id="btn-theme" class="btn btn-secondary" title="切换深色 / 浅色模式">深色</button>
       <button id="btn-export" class="btn btn-secondary" title="下载 database.json">导出数据库</button>
       <label class="btn btn-secondary" title="上传 database.json 覆盖当前数据">
         导入数据库
@@ -50,6 +59,20 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/js/api.js"></script>
+  <script src="/js/components/tooltip.js"></script>
+  <script src="/js/components/field.js"></script>
+  <script src="/js/components/select.js"></script>
+  <script src="/js/components/multi-select.js"></script>
+  <script src="/js/components/slider.js"></script>
+  <script src="/js/components/enum-select.js"></script>
+  <script src="/js/components/employee-picker.js"></script>
+  <script src="/js/components/dept-picker.js"></script>
+  <script src="/js/components/sprint-picker.js"></script>
+  <script src="/js/components/skill-editor.js"></script>
+  <script src="/js/components/role-config.js"></script>
+  <script src="/js/components/skeleton.js"></script>
+  <script src="/js/components/validator.js"></script>
+  <script src="/js/help-text.js"></script>
   <script src="/js/views/org.js"></script>
   <script src="/js/views/employees.js"></script>
   <script src="/js/views/tasks.js"></script>
@@ -57,6 +80,10 @@
   <script src="/js/views/proposals.js"></script>
   <script src="/js/views/review.js"></script>
   <script src="/js/views/ability_updates.js"></script>
+  <script src="/js/views/people_status.js"></script>
+  <script src="/js/views/board.js"></script>
+  <script src="/js/views/notifications.js"></script>
+  <script src="/js/views/sprints.js"></script>
   <script src="/js/views/chat.js"></script>
   <script src="/js/app.js"></script>
 </body>

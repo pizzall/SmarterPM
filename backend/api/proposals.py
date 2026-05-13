@@ -219,6 +219,7 @@ def modify_proposal(task_id: str, pid: str, body: ProposalModifyIn) -> APIRespon
         task["updated_at"] = now_iso()
 
         from backend.core.ability_updates import generate_ability_proposals
+        from backend.api.notifications import push_notification
 
         ability_proposals = generate_ability_proposals(
             data,
@@ -227,6 +228,23 @@ def modify_proposal(task_id: str, pid: str, body: ProposalModifyIn) -> APIRespon
             input_text=body.instruction,
             related_employee_ids=[m.get("employee_id") for m in proposal.get("members") or []],
         )
+        push_notification(
+            data,
+            title=f"方案已修改：{task.get('title','')}",
+            kind="proposal_modified",
+            body=body.instruction[:80] if body.instruction else "",
+            link=f"#/tasks/{task_id}/proposals",
+            related={"task_id": task_id, "proposal_id": pid},
+        )
+        if ability_proposals:
+            push_notification(
+                data,
+                title=f"能力值待审 +{len(ability_proposals)}",
+                kind="ability_pending",
+                body="由方案修改触发，请到「能力值待审」处理",
+                link="#/ability-updates",
+                related={"task_id": task_id, "count": len(ability_proposals)},
+            )
 
         return APIResponse(
             ok=True,
