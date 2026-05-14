@@ -4,6 +4,8 @@
 
 从零搭建环境与分步部署说明（含 SSH、Python、Windows 一键脚本）：请参阅 [**DEPLOYMENT-PM.md**](DEPLOYMENT-PM.md)。
 
+产品与模块介绍（面向 PM / 业务负责人）：请参阅 [**PRODUCT-OVERVIEW-PM.md**](PRODUCT-OVERVIEW-PM.md)。
+
 ## 特性
 
 - 在指定的组织结构范围内，为负责人推荐最合适的任务执行人选组合
