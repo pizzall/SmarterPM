@@ -44,16 +44,32 @@
   </main>
 
   <button id="chat-fab" class="chat-fab" title="自由对话">问问 AI</button>
-  <aside id="chat-panel" class="chat-panel hidden">
-    <div class="chat-header">
-      <span>自由对话</span>
-      <button id="chat-close" class="btn btn-ghost">×</button>
+  <aside id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="问问 AI">
+    <div class="chat-header" id="chat-drag-handle">
+      <button id="chat-toggle-history" class="chat-icon-btn" type="button" title="历史会话">≡</button>
+      <span class="chat-title">自由对话</span>
+      <span class="chat-actions">
+        <button id="chat-new" class="chat-icon-btn" type="button" title="新会话">+</button>
+        <button id="chat-clear" class="chat-icon-btn" type="button" title="删除当前会话">⌫</button>
+        <button id="chat-close" class="chat-icon-btn" type="button" title="关闭">×</button>
+      </span>
     </div>
-    <div id="chat-messages" class="chat-messages"></div>
-    <form id="chat-form" class="chat-form">
-      <textarea id="chat-input" rows="2" placeholder="问点什么 / 提点建议…"></textarea>
-      <button class="btn btn-primary" type="submit">发送</button>
-    </form>
+    <div class="chat-body">
+      <aside id="chat-sidebar" class="chat-sidebar hidden" aria-label="历史会话">
+        <div class="chat-sidebar-header">
+          <span>历史会话</span>
+        </div>
+        <div id="chat-conversation-list" class="chat-conversation-list"></div>
+      </aside>
+      <div class="chat-main">
+        <div id="chat-messages" class="chat-messages"></div>
+        <form id="chat-form" class="chat-form">
+          <textarea id="chat-input" rows="2" placeholder="问点什么 / 提点建议…"></textarea>
+          <button class="btn btn-primary" type="submit">发送</button>
+        </form>
+      </div>
+    </div>
+    <div id="chat-resize" class="chat-resize" title="拖动调整大小"></div>
   </aside>
 
   <div id="toast" class="toast hidden"></div>

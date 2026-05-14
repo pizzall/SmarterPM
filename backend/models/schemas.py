@@ -148,3 +148,4 @@ class AbilityUpdatePatchIn(BaseModel):
 class ChatIn(BaseModel):
     user_message: str
     conversation_id: Optional[str] = None
+    new_conversation: bool = False

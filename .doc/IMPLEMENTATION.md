@@ -89,10 +89,12 @@ SmarterPM/
   "employees": { "<id>": { ..., "correction_log": [...] } },
   "tasks": { "<id>": { ..., "proposals": [...], "review": [...] } },
   "sprints": { "<id>": {...} },
-  "conversations": { "<id>": { "scope": "planning|free_chat", "messages": [...] } },
+  "conversations": { "<id>": { "scope": "planning|free_chat", "messages": [...], "created_at": "...", "updated_at": "..." } },
   "ability_update_proposals": { "<uid>": {...} }
 }
 ```
+
+`conversations` 中 `free_chat` 类型的新建与每次消息更新会写入 `updated_at`，供 `GET /api/chat/conversations` 排序与展示；旧数据可能仅有 `created_at`，列表接口会回退使用该字段。
 
 ### 3.2 读写策略
 
@@ -173,11 +175,46 @@ POST /api/planning/<cid>/finalize { title?, sprint_id? }
 
 每个 conversation 持久化在 `db.conversations[<cid>]`，含完整消息历史 + 当前 `draft`。`finalize` 时把 draft 落到 `db.tasks[<task_id>]`，并通过 `from_conversation` 字段引用源对话。
 
-### 5.2 自由对话（需求 8）
+### 5.2 自由对话（需求 8）与 chat 浮窗增强
 
-`POST /api/chat`：每次都把当前组织 / 员工 / 任务的"摘要快照"（不含纠正日志、原始 messages）一并送进 prompt。LLM 输出 `reply` + `suggested_actions` 列表。
+会话主体仍落在 `database.json` 的 `conversations[<id>]`，且仅处理 `scope: "free_chat"` 的请求与列表；任务规划会话（`planning` 等）不在自由对话列表中出现。
 
-> 安全策略：自由对话默认**只读**——不论 LLM 提出什么"建议操作"，前端不会自动执行任何写接口，必须由管理者复制建议到对应模块（员工编辑 / 任务编辑 / 方案修改）后再确认提交。
+每条 `free_chat` 记录在写入路径上会维护 `updated_at`（与用户 / 助手消息追加同步）；历史数据若仅有 `created_at`，列表接口会以其作为 `updated_at` 的回退取值。
+
+#### 后端 API（`backend/api/chat.py`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/chat` | 发送用户消息并返回助手回复 |
+| GET | `/api/chat/conversations` | 列出所有 `free_chat` 会话，按 `updated_at` 倒序；元素含 `id, created_at, updated_at, message_count, preview`（`preview` 为首条 user 消息前 30 字） |
+| GET | `/api/chat/conversations/{cid}` | 取单会话完整对象（含 `messages`） |
+| DELETE | `/api/chat/conversations/{cid}` | 删除整段 `free_chat` 会话；非 `free_chat` 返回 400 |
+| DELETE | `/api/chat/conversations/{cid}/messages/{idx}` | 按 0-based 下标删除一条消息；越界 404 |
+
+`POST /api/chat` 请求体（`ChatIn`，`backend/models/schemas.py`）：
+
+- `user_message`：必填。
+- `conversation_id`：可选；延续会话时传入。
+- `new_conversation`：可选，默认 `false`。为 `true` 时**强制新建会话**，即使 body 里带了旧的 `conversation_id` 也会被忽略。
+
+每次调用仍把当前组织 / 员工 / 任务的「摘要快照」送进 prompt；**最近最多 20 条** `messages` 作为 `history` 参与 LLM 调用，用于多轮追问上下文。
+
+> 安全策略：自由对话默认**只读**——不论 LLM 提出什么「建议操作」，前端不会自动执行任何写接口，必须由管理者复制建议到对应模块后再确认提交。
+
+#### 前端（`frontend/index.html`、`css/style.css`、`js/views/chat.js`）
+
+- **布局**：`#chat-panel` 内含可拖动头部 `#chat-drag-handle`、可折叠左侧栏 `#chat-sidebar`（会话列表 `#chat-conversation-list`）、主区 `#chat-messages` + `#chat-form`，右下角 `#chat-resize` 用于缩放。
+- **几何与当前会话（浏览器 `localStorage`，非 `database.json`）**：
+  - `smarterpm.chat.geom`：JSON，`{ left, top, width, height }`；首次打开在未保存几何时由脚本按视口计算默认右下角；拖动 / 缩放结束后写回；`resize` 时重新 clamp，保证至少约 80px 留在视口内。
+  - `smarterpm.chat.current_cid`：当前选中的会话 id；打开 FAB 时在拉取列表后尝试恢复并 `GET` 详情渲染历史。
+  - `smarterpm.chat.sidebar_open`：历史侧栏展开状态（`"1"` / `"0"`）。
+- **交互摘要**：≡ 切换历史列表；`+` 清空当前前端状态并在**下一次发送**时带 `new_conversation: true`；⌫ 删除**当前**整段会话（确认后调 DELETE）；消息行 hover 显示单条删除；ESC 关闭面板仍由 `app.js` 全局处理。
+- **约束**：面板最小约 320×360，最大约 95vw×92vh；带 `.is-positioned` 时表示由脚本写了 `left/top`，与纯 CSS 的移动端兜底（未定位时下半屏）区分。
+
+#### 与《设计方案》的对应关系
+
+- 持久化会话与上下文：服务端 `conversations` + 最近 20 条上下文。
+- 「本地 JSON」在工程上体现为：**业务数据**在 `database.json`；**仅与当前浏览器 UI 相关的状态**在 `localStorage` 上述键中。
 
 ## 6. 能力值变更（需求 7）
 
@@ -225,6 +262,7 @@ pending  --PATCH-->   edited  --apply-->  applied
 - 各 view 文件向全局 `window.Views.<name>` 挂载 `render()`，便于路由调用。
 - 表单 / JSON 双通道：`org.js`、`tasks.js` 内部维护 `mode` 状态，两 tab 切换互不丢失数据。
 - Toast：`UI.showToast()` 简单的右上角提示，3 秒后自动隐藏。
+- **问问 AI 浮窗**（`views/chat.js`）：见 §5.2「chat 浮窗增强」——多会话列表、单条/整会话删除、可拖动可缩放与 `localStorage` 几何恢复；`API.get` / `API.post` / `API.del` 与上述 chat 路由配合。
 
 ## 9. 9 项需求映射
 
@@ -237,7 +275,7 @@ pending  --PATCH-->   edited  --apply-->  applied
 | 5. 任务增删改 | `api/tasks.py` | `views/tasks.js`（列表 + 详情 form/json） |
 | 6. 任务回顾评价 | `api/reviews.py` | `views/review.js`（时间线 + 表单） |
 | 7. 能力值变更建议 + 微调 | `core/ability_updates.py` + `api/ability_updates.py` | `views/ability_updates.js`（按状态分组 + 微调输入） |
-| 8. 自由对话 | `api/chat.py` | `views/chat.js`（全局浮动面板） |
+| 8. 自由对话 | `api/chat.py`（含会话列表与删除、强制新建） | `views/chat.js`（可拖动/缩放浮窗、历史侧栏、localStorage 几何与 current_cid） |
 | 9. H5 + 11011 端口可配置 | `backend/main.py` 读 `config.json` | `frontend/` 静态挂载 |
 
 ## 10. 启动与运行
