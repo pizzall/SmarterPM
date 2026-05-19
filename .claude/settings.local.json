@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(python *)",
-      "Bash(curl -s http://127.0.0.1:11011/api/employees)"
+      "Bash(curl -s http://127.0.0.1:11011/api/employees)",
+      "Bash(git *)",
+      "Bash(pip show *)",
+      "Bash(pip list *)",
+      "Bash(python3.12 --version)",
+      "Bash(where python3.12)",
+      "Bash(pip download *)",
+      "Read(//c/Users/25684/AppData/Roaming/Python/Python314/site-packages/pydantic_core/**)",
+      "Read(//c/Users/25684/AppData/Roaming/Python/Python314/site-packages/httptools/**)"
     ]
   }
 }
